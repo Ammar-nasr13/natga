@@ -457,6 +457,25 @@ body {
     border-color: var(--navy-primary);
 }
 
+/* Leaderboard Rank Badges */
+.rank-badge {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-en);
+    font-weight: 800;
+    font-size: 0.9rem;
+}
+.rank-badge.top-1 { background: #FEF3C7; color: #D97706; border: 2px solid #F59E0B; }
+.rank-badge.top-2 { background: #F1F5F9; color: #475569; border: 2px solid #94A3B8; }
+.rank-badge.top-3 { background: #FFEDD5; color: #C2410C; border: 2px solid #EA580C; }
+.rank-badge.other { background: rgba(11, 25, 44, 0.06); color: var(--navy-primary); }
+
+.text-gold { color: var(--accent-gold); }
+
 /* Table */
 .section-title { font-size: clamp(1.1rem, 3.5vw, 1.25rem); font-weight: 800; margin-bottom: 1rem; color: var(--navy-primary); }
 

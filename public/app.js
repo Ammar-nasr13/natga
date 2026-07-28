@@ -376,7 +376,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (topStudentsLoaded) return;
         const tbody = document.getElementById('top-table-body');
         if (!tbody) return;
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> جاري التحميل...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 2rem;"><i class="fa-solid fa-spinner fa-spin"></i> جاري تحميل قائمة الأوائل...</td></tr>';
 
         try {
             const res = await fetch('/api/top?limit=50');
@@ -397,16 +397,18 @@ document.addEventListener('DOMContentLoaded', () => {
                         <td><strong>${stu.arabic_name}</strong></td>
                         <td>${stu.seating_no}</td>
                         <td><strong>${stu.total_degree}</strong> / 320</td>
-                        <td><strong>${stu.percentage}%</strong></td>
+                        <td><span style="font-family:var(--font-en); font-weight:700;">${stu.percentage}%</span></td>
                         <td><span class="cert-badge passed" style="padding:0.2rem 0.8rem; font-size:0.8rem;">${stu.student_case_desc}</span></td>
                     `;
                     tbody.appendChild(tr);
                 });
                 topStudentsLoaded = true;
+            } else {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2rem; color: var(--warning-amber);"><i class="fa-solid fa-clock"></i> ${data.message || 'جاري تجهيز قائمة الأوائل على الخادم، يرجى الضغط مرة أخرى خلال ثوانٍ.'}</td></tr>`;
             }
         } catch (err) {
             console.error('Top students error:', err);
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">حدث خطأ في تحميل الأوائل</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 2rem; color: var(--danger-red);"><i class="fa-solid fa-circle-exclamation"></i> حدث خطأ أثناء تحميل الأوائل. يرجى الضغط مرة أخرى.</td></tr>';
         }
     }
 
