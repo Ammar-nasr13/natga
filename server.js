@@ -1,74 +1,98 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const { DatabaseSync } = require('node:sqlite');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-// Connect to SQLite Database
-const dbPath = path.join(__dirname, 'results.db');
-const db = new DatabaseSync(dbPath);
+const HOST = '0.0.0.0';
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Prepared SQL Statements
-const stmtGetBySeat = db.prepare(`
-    SELECT seating_no, arabic_name, total_degree, percentage, student_case_desc, rank
-    FROM students
-    WHERE seating_no = ?
-`);
+// Connect to SQLite Database safely
+const dbPath = path.join(__dirname, 'results.db');
+let db = null;
+let stmtGetBySeat = null;
+let stmtSearchSeatPrefix = null;
+let stmtFtsSearchByName = null;
+let stmtSearchByNameFallback = null;
+let stmtGetTop = null;
+let stmtGetStats = null;
+let stmtGetDistribution = null;
+let dbReady = false;
 
-const stmtSearchSeatPrefix = db.prepare(`
-    SELECT seating_no, arabic_name, total_degree, percentage, student_case_desc, rank
-    FROM students
-    WHERE CAST(seating_no AS TEXT) LIKE ?
-    ORDER BY seating_no ASC
-    LIMIT 25
-`);
+try {
+    if (fs.existsSync(dbPath)) {
+        db = new DatabaseSync(dbPath);
+        
+        // Prepared SQL Statements
+        stmtGetBySeat = db.prepare(`
+            SELECT seating_no, arabic_name, total_degree, percentage, student_case_desc, rank
+            FROM students
+            WHERE seating_no = ?
+        `);
 
-// High Performance FTS5 Search Statement
-const stmtFtsSearchByName = db.prepare(`
-    SELECT CAST(seating_no AS INTEGER) as seating_no, arabic_name, CAST(total_degree AS REAL) as total_degree, CAST(percentage AS REAL) as percentage, student_case_desc, CAST(student_rank AS INTEGER) as rank
-    FROM students_fts
-    WHERE arabic_name MATCH ?
-    ORDER BY CAST(student_rank AS INTEGER) ASC
-    LIMIT 25
-`);
+        stmtSearchSeatPrefix = db.prepare(`
+            SELECT seating_no, arabic_name, total_degree, percentage, student_case_desc, rank
+            FROM students
+            WHERE CAST(seating_no AS TEXT) LIKE ?
+            ORDER BY seating_no ASC
+            LIMIT 25
+        `);
 
-const stmtSearchByNameFallback = db.prepare(`
-    SELECT seating_no, arabic_name, total_degree, percentage, student_case_desc, rank
-    FROM students
-    WHERE arabic_name LIKE ?
-    ORDER BY rank ASC
-    LIMIT 25
-`);
+        stmtFtsSearchByName = db.prepare(`
+            SELECT CAST(seating_no AS INTEGER) as seating_no, arabic_name, CAST(total_degree AS REAL) as total_degree, CAST(percentage AS REAL) as percentage, student_case_desc, CAST(student_rank AS INTEGER) as rank
+            FROM students_fts
+            WHERE arabic_name MATCH ?
+            ORDER BY CAST(student_rank AS INTEGER) ASC
+            LIMIT 25
+        `);
 
-const stmtGetTop = db.prepare(`
-    SELECT seating_no, arabic_name, total_degree, percentage, student_case_desc, rank
-    FROM students
-    ORDER BY rank ASC, seating_no ASC
-    LIMIT ?
-`);
+        stmtSearchByNameFallback = db.prepare(`
+            SELECT seating_no, arabic_name, total_degree, percentage, student_case_desc, rank
+            FROM students
+            WHERE arabic_name LIKE ?
+            ORDER BY rank ASC
+            LIMIT 25
+        `);
 
-const stmtGetStats = db.prepare(`SELECT key, value FROM stats`);
+        stmtGetTop = db.prepare(`
+            SELECT seating_no, arabic_name, total_degree, percentage, student_case_desc, rank
+            FROM students
+            ORDER BY rank ASC, seating_no ASC
+            LIMIT ?
+        `);
 
-const stmtGetDistribution = db.prepare(`
-    SELECT 
-        SUM(CASE WHEN percentage >= 90 THEN 1 ELSE 0 END) as range_90_100,
-        SUM(CASE WHEN percentage >= 85 AND percentage < 90 THEN 1 ELSE 0 END) as range_85_90,
-        SUM(CASE WHEN percentage >= 75 AND percentage < 85 THEN 1 ELSE 0 END) as range_75_85,
-        SUM(CASE WHEN percentage >= 65 AND percentage < 75 THEN 1 ELSE 0 END) as range_65_75,
-        SUM(CASE WHEN percentage >= 50 AND percentage < 65 THEN 1 ELSE 0 END) as range_50_65,
-        SUM(CASE WHEN percentage < 50 THEN 1 ELSE 0 END) as range_under_50
-    FROM students
-`);
+        stmtGetStats = db.prepare(`SELECT key, value FROM stats`);
+
+        stmtGetDistribution = db.prepare(`
+            SELECT 
+                SUM(CASE WHEN percentage >= 90 THEN 1 ELSE 0 END) as range_90_100,
+                SUM(CASE WHEN percentage >= 85 AND percentage < 90 THEN 1 ELSE 0 END) as range_85_90,
+                SUM(CASE WHEN percentage >= 75 AND percentage < 85 THEN 1 ELSE 0 END) as range_75_85,
+                SUM(CASE WHEN percentage >= 65 AND percentage < 75 THEN 1 ELSE 0 END) as range_65_75,
+                SUM(CASE WHEN percentage >= 50 AND percentage < 65 THEN 1 ELSE 0 END) as range_50_65,
+                SUM(CASE WHEN percentage < 50 THEN 1 ELSE 0 END) as range_under_50
+            FROM students
+        `);
+
+        dbReady = true;
+        console.log('✅ Database results.db loaded successfully.');
+    } else {
+        console.warn('⚠️ Warning: results.db file not found at:', dbPath);
+    }
+} catch (err) {
+    console.error('❌ Error initializing database:', err.message);
+    dbReady = false;
+}
 
 // Cache global stats in memory
 let cachedStats = null;
 let cachedDistribution = null;
 
 function loadStats() {
+    if (!dbReady) return { total_students: 0, distribution: {} };
     if (!cachedStats) {
         const rows = stmtGetStats.all();
         cachedStats = {};
@@ -82,11 +106,19 @@ function loadStats() {
     return { ...cachedStats, distribution: cachedDistribution };
 }
 
+// Healthcheck endpoint for Docker / Coolify / Reverse Proxy
+app.get('/health', (req, res) => {
+    res.json({ status: 'ok', dbReady, uptime: process.uptime() });
+});
+
 // API Routes
 
 // 1. Get student by seat number
 app.get('/api/student/:seat', (req, res) => {
     try {
+        if (!dbReady) {
+            return res.status(503).json({ success: false, message: 'قاعدة البيانات غير متوفرة على الخادم حالياً. يرجى رفع ملف results.db' });
+        }
         const seat = parseInt(req.params.seat, 10);
         if (isNaN(seat)) {
             return res.status(400).json({ success: false, message: 'رقم الجلوس يجب أن يكون رقماً صحيحاً' });
@@ -119,6 +151,9 @@ app.get('/api/student/:seat', (req, res) => {
 // 2. Ultra-fast Search by name or seat number
 app.get('/api/search', (req, res) => {
     try {
+        if (!dbReady) {
+            return res.status(503).json({ success: false, message: 'قاعدة البيانات غير متوفرة حالياً' });
+        }
         const query = (req.query.q || '').trim();
         if (!query || query.length < 2) {
             return res.json({ success: true, data: [] });
@@ -137,7 +172,6 @@ app.get('/api/search', (req, res) => {
         } else {
             // Text query: try FTS5 first, fallback to LIKE
             try {
-                // Prepare FTS terms (e.g., "احمد" -> "احمد*")
                 const ftsQuery = query.split(/\s+/).filter(Boolean).map(term => `${term}*`).join(' AND ');
                 results = stmtFtsSearchByName.all(ftsQuery);
             } catch (ftsErr) {
@@ -158,6 +192,9 @@ app.get('/api/search', (req, res) => {
 // 3. Get Top Students
 app.get('/api/top', (req, res) => {
     try {
+        if (!dbReady) {
+            return res.status(503).json({ success: false, message: 'قاعدة البيانات غير متوفرة حالياً' });
+        }
         const limit = Math.min(parseInt(req.query.limit || '50', 10), 100);
         const topStudents = stmtGetTop.all(limit);
         res.json({ success: true, count: topStudents.length, data: topStudents, developer: "Ammar Nasr" });
@@ -170,6 +207,9 @@ app.get('/api/top', (req, res) => {
 // 4. Get Statistics
 app.get('/api/stats', (req, res) => {
     try {
+        if (!dbReady) {
+            return res.status(503).json({ success: false, message: 'قاعدة البيانات غير متوفرة حالياً' });
+        }
         const stats = loadStats();
         res.json({ success: true, data: stats, developer: "Ammar Nasr" });
     } catch (err) {
@@ -178,11 +218,10 @@ app.get('/api/stats', (req, res) => {
     }
 });
 
-// Restart or start server
-app.listen(PORT, () => {
+// Start server listening on all network interfaces
+app.listen(PORT, HOST, () => {
     console.log(`====================================================`);
-    console.log(` Thanaweya Amma Results Server running on port ${PORT}`);
+    console.log(` Thanaweya Amma Results Server running on http://${HOST}:${PORT}`);
     console.log(` Developed by: Ammar Nasr`);
-    console.log(` URL: http://localhost:${PORT}`);
     console.log(`====================================================`);
 });
