@@ -439,12 +439,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (distBarsContainer && dist) {
                     distBarsContainer.innerHTML = '';
                     const ranges = [
-                        { label: '90% - 100% (ممتاز مرتفع)', count: dist.range_90_100, color: 'var(--navy-primary)' },
-                        { label: '85% - 90% (ممتاز)', count: dist.range_85_90, color: 'var(--accent-blue)' },
-                        { label: '75% - 85% (جيد جداً)', count: dist.range_75_85, color: '#4F46E5' },
-                        { label: '65% - 75% (جيد)', count: dist.range_65_75, color: '#7C3AED' },
-                        { label: '50% - 65% (مقبول)', count: dist.range_50_65, color: 'var(--warning-amber)' },
-                        { label: 'أقل من 50% (دور ثان/راسب)', count: dist.range_under_50, color: 'var(--danger-red)' }
+                        { label: '90% - 100% (ممتاز مرتفع)', count: dist.range_90_100, color: '#0B192C', icon: 'fa-award' },
+                        { label: '85% - 90% (ممتاز)', count: dist.range_85_90, color: '#2563EB', icon: 'fa-star' },
+                        { label: '75% - 85% (جيد جداً)', count: dist.range_75_85, color: '#4F46E5', icon: 'fa-thumbs-up' },
+                        { label: '65% - 75% (جيد)', count: dist.range_65_75, color: '#7C3AED', icon: 'fa-check' },
+                        { label: '50% - 65% (مقبول)', count: dist.range_50_65, color: '#D97706', icon: 'fa-ellipsis' },
+                        { label: 'أقل من 50% (دور ثان/راسب)', count: dist.range_under_50, color: '#DC2626', icon: 'fa-triangle-exclamation' }
                     ];
 
                     ranges.forEach(r => {
@@ -453,8 +453,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         row.className = 'dist-row';
                         row.innerHTML = `
                             <div class="dist-meta">
-                                <span>${r.label}</span>
-                                <span>${parseInt(r.count).toLocaleString('ar-EG')} طالب (${pct}%)</span>
+                                <span><i class="fa-solid ${r.icon}" style="color: ${r.color}; margin-left: 0.4rem;"></i> ${r.label}</span>
+                                <span><strong>${parseInt(r.count).toLocaleString('ar-EG')} طالب</strong> <span style="color: ${r.color}; font-family: var(--font-en); font-weight: 800; margin-right: 0.3rem;">(${pct}%)</span></span>
                             </div>
                             <div class="dist-bar-outer">
                                 <div class="dist-bar-inner" style="width: ${pct}%; background: ${r.color};"></div>
