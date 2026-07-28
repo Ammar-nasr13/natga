@@ -14,8 +14,9 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-    <!-- Canvas Confetti -->
+    <!-- Canvas Confetti & html2pdf -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <link rel="stylesheet" href="style.css">
 </head>
@@ -63,8 +64,10 @@
                 <!-- Seat Search Form -->
                 <form id="seat-search-form" class="search-form">
                     <div class="input-group">
-                        <i class="fa-solid fa-hashtag input-icon"></i>
-                        <input type="number" id="seat-input" placeholder="أدخل رقم الجلوس" required autocomplete="off">
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-hashtag input-icon"></i>
+                            <input type="number" id="seat-input" placeholder="أدخل رقم الجلوس" required autocomplete="off">
+                        </div>
                         <button type="submit" class="primary-btn search-btn">
                             <span class="btn-text"><i class="fa-solid fa-magnifying-glass"></i> بحث</span>
                             <span class="btn-loader" style="display:none;"><i class="fa-solid fa-spinner fa-spin"></i></span>
@@ -75,8 +78,10 @@
                 <!-- Name Search Form -->
                 <form id="name-search-form" class="search-form" style="display: none;">
                     <div class="input-group">
-                        <i class="fa-solid fa-user input-icon"></i>
-                        <input type="text" id="name-input" placeholder="أدخل اسم الطالب" required autocomplete="off">
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-user input-icon"></i>
+                            <input type="text" id="name-input" placeholder="أدخل اسم الطالب" required autocomplete="off">
+                        </div>
                         <button type="submit" class="primary-btn search-btn">
                             <span class="btn-text"><i class="fa-solid fa-magnifying-glass"></i> بحث</span>
                             <span class="btn-loader" style="display:none;"><i class="fa-solid fa-spinner fa-spin"></i></span>
@@ -95,7 +100,8 @@
                     <div class="cert-header">
                         <div class="cert-logo"><i class="fa-solid fa-award"></i></div>
                         <div class="cert-title-group">
-                            <h3>نتيجة الثانوية العامة 2026</h3>
+                            <h3>شهادة نتيجة الثانوية العامة 2026</h3>
+                            <span class="cert-sub">وزارة التربية والتعليم • النظام الحديث</span>
                         </div>
                         <div class="cert-badge" id="case-badge">ناجح دور أول</div>
                     </div>
@@ -144,8 +150,8 @@
 
                     <!-- Clean Footer Actions -->
                     <div class="cert-footer no-print">
-                        <button class="secondary-btn" id="print-btn"><i class="fa-solid fa-print"></i> طباعة النتيجة</button>
-                        <button class="secondary-btn" id="share-btn"><i class="fa-solid fa-share-nodes"></i> مشاركة</button>
+                        <button class="secondary-btn" id="print-btn"><i class="fa-solid fa-file-pdf"></i> تحميل PDF / طباعة</button>
+                        <button class="secondary-btn" id="share-btn"><i class="fa-solid fa-share-nodes"></i> مشاركة النتيجة</button>
                     </div>
                 </div>
             </div>

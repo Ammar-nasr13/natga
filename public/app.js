@@ -22,6 +22,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const printBtn = document.getElementById('print-btn');
     const shareBtn = document.getElementById('share-btn');
 
+    // Toast Notification Helper
+    function showToast(message) {
+        let toast = document.querySelector('.toast-notification');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.className = 'toast-notification';
+            toast.innerHTML = `<i class="fa-solid fa-circle-check"></i> <span class="toast-msg"></span>`;
+            document.body.appendChild(toast);
+        }
+        toast.querySelector('.toast-msg').textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
+    }
+
     // 1. Navigation Tabs Switcher
     if (navButtons.length > 0) {
         navButtons.forEach(btn => {
@@ -412,29 +428,76 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Print & Share
+    // PDF Download & Native Print Handler
     if (printBtn) {
-        printBtn.addEventListener('click', () => window.print());
-    }
+        printBtn.addEventListener('click', () => {
+            const element = document.getElementById('printable-certificate');
+            const seatEl = document.getElementById('res-seat');
+            const seatNum = seatEl ? seatEl.textContent.trim() : 'student';
 
-    if (shareBtn) {
-        shareBtn.addEventListener('click', () => {
-            const nameEl = document.getElementById('res-name');
-            const percentageEl = document.getElementById('res-percentage');
-            const rankEl = document.getElementById('res-rank');
+            if (typeof html2pdf === 'function') {
+                showToast('جاري تجهيز وتحميل ملف الـ PDF...');
+                const noPrintEls = element.querySelectorAll('.no-print');
+                noPrintEls.forEach(el => el.style.display = 'none');
 
-            const studentName = nameEl ? nameEl.textContent : '';
-            const percentage = percentageEl ? percentageEl.textContent : '';
-            const rank = rankEl ? rankEl.textContent : '';
+                const opt = {
+                    margin: [8, 8, 8, 8],
+                    filename: `نتيجة_الثانوية_العامة_${seatNum}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
 
-            const shareText = `نتيجة الثانوية العامة 2026 🎓\nاسم الطالب: ${studentName}\nالنسبة المئوية: ${percentage}\nالترتيب على الجمهورية: ${rank}`;
-
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(shareText).then(() => {
-                    alert('تم نسخ تفاصيل النتيجة بنجاح!');
+                html2pdf().set(opt).from(element).save().then(() => {
+                    noPrintEls.forEach(el => el.style.display = 'flex');
+                }).catch(err => {
+                    console.error('PDF generation error:', err);
+                    noPrintEls.forEach(el => el.style.display = 'flex');
+                    window.print();
                 });
             } else {
-                alert(shareText);
+                window.print();
+            }
+        });
+    }
+
+    // Native Mobile Web Share & Clipboard Fallback Handler
+    if (shareBtn) {
+        shareBtn.addEventListener('click', async () => {
+            const nameEl = document.getElementById('res-name');
+            const seatEl = document.getElementById('res-seat');
+            const percentageEl = document.getElementById('res-percentage');
+            const scoreEl = document.getElementById('res-score');
+            const rankEl = document.getElementById('res-rank');
+            const caseBadge = document.getElementById('case-badge');
+
+            const studentName = nameEl ? nameEl.textContent : '';
+            const seatNo = seatEl ? seatEl.textContent : '';
+            const percentage = percentageEl ? percentageEl.textContent : '';
+            const score = scoreEl ? scoreEl.textContent : '';
+            const rank = rankEl ? rankEl.textContent : '';
+            const status = caseBadge ? caseBadge.textContent : '';
+
+            const shareTitle = `نتيجة الطالب ${studentName} - الثانوية العامة 2026`;
+            const shareText = `🎓 نتيجة الثانوية العامة 2026\n👤 الطالب: ${studentName}\n🔢 رقم الجلوس: ${seatNo}\n📊 النسبة: ${percentage} (${score}/320)\n👑 الترتيب: ${rank}\n📌 الحالة: ${status}\n\nتم الاستعلام عبر موقع Eng. Ammar Nasr:`;
+            const shareUrl = window.location.href;
+
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: shareTitle,
+                        text: shareText,
+                        url: shareUrl
+                    });
+                } catch (err) {
+                    // User canceled share or unsupported
+                }
+            } else if (navigator.clipboard) {
+                navigator.clipboard.writeText(`${shareText}\n${shareUrl}`).then(() => {
+                    showToast('تم نسخ تفاصيل النتيجة بنجاح!');
+                });
+            } else {
+                alert(`${shareText}\n${shareUrl}`);
             }
         });
     }
