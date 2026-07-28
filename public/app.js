@@ -22,6 +22,44 @@ document.addEventListener('DOMContentLoaded', () => {
     const printBtn = document.getElementById('print-btn');
     const shareBtn = document.getElementById('share-btn');
 
+    // Custom UI Alert Modal Handler (Replaces browser alert)
+    function showAlert(message, type = 'warning', title = 'تنبيه') {
+        const modal = document.getElementById('custom-alert-modal');
+        const modalTitle = document.getElementById('custom-alert-title');
+        const modalMsg = document.getElementById('custom-alert-message');
+        const modalIcon = document.getElementById('custom-alert-icon');
+        const closeBtn = document.getElementById('custom-alert-close-btn');
+
+        if (!modal) return;
+
+        if (modalTitle) modalTitle.textContent = title;
+        if (modalMsg) modalMsg.textContent = message;
+
+        if (modalIcon) {
+            modalIcon.className = `modal-icon-badge ${type}`;
+            if (type === 'error') {
+                modalIcon.innerHTML = `<i class="fa-solid fa-circle-xmark"></i>`;
+            } else if (type === 'success') {
+                modalIcon.innerHTML = `<i class="fa-solid fa-circle-check"></i>`;
+            } else if (type === 'info') {
+                modalIcon.innerHTML = `<i class="fa-solid fa-circle-info"></i>`;
+            } else {
+                modalIcon.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i>`;
+            }
+        }
+
+        modal.style.display = 'flex';
+
+        const handleClose = () => {
+            modal.style.display = 'none';
+            closeBtn.removeEventListener('click', handleClose);
+        };
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', handleClose);
+        }
+    }
+
     // Toast Notification Helper
     function showToast(message) {
         let toast = document.querySelector('.toast-notification');
@@ -112,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const seat = seatInput.value.trim();
             if (!seat) {
-                alert('برجاء إدخال رقم الجلوس أولاً');
+                showAlert('برجاء إدخال رقم الجلوس أولاً قبل البحث', 'warning', 'تنبيه');
                 return;
             }
 
@@ -125,12 +163,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     displayStudentCertificate(data.data);
                     if (multipleResultsContainer) multipleResultsContainer.style.display = 'none';
                 } else {
-                    alert(data.message || 'لم يتم العثور على نتيجة لهذا الرقم');
+                    showAlert(data.message || 'عذراً، لم نتمكن من العثور على نتيجة لهذا الرقم. التأكد من رقم الجلوس والمحاولة مجدداً.', 'error', 'عذراً، لا توجد نتيجة');
                     if (resultContainer) resultContainer.style.display = 'none';
                 }
             } catch (err) {
                 console.error('Fetch error:', err);
-                alert('حدث خطأ أثناء البحث، يرجى المحاولة مرة أخرى');
+                showAlert('حدث خطأ في الاتصال بالخادم، يرجى إعادة المحاولة', 'error', 'خطأ خادم');
             } finally {
                 hideLoader(seatSearchForm);
             }
@@ -170,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (suggestionsBox) suggestionsBox.style.display = 'none';
             const q = nameInput.value.trim();
             if (!q) {
-                alert('برجاء كتابة اسم الطالب أولاً');
+                showAlert('برجاء كتابة اسم الطالب أولاً', 'warning', 'تنبيه');
                 return;
             }
 
@@ -191,13 +229,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (resultContainer) resultContainer.style.display = 'none';
                     }
                 } else {
-                    alert('لم يتم العثور على نتائج تطابق هذا الاسم');
+                    showAlert('لم يتم العثور على أي طالب يطابق هذا الاسم. يرجى التأكد من طريقة كتابة الاسم.', 'error', 'لا توجد نتائج');
                     if (resultContainer) resultContainer.style.display = 'none';
                     if (multipleResultsContainer) multipleResultsContainer.style.display = 'none';
                 }
             } catch (err) {
                 console.error('Search error:', err);
-                alert('حدث خطأ أثناء البحث');
+                showAlert('حدث خطأ أثناء البحث عن الاسم', 'error', 'خطأ');
             } finally {
                 hideLoader(nameSearchForm);
             }
@@ -268,9 +306,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.success && data.data) {
                 displayStudentCertificate(data.data);
                 if (multipleResultsContainer) multipleResultsContainer.style.display = 'none';
+            } else {
+                showAlert(data.message || 'عذراً، لم يتم العثور على النتيجة', 'error', 'تنبيه');
             }
         } catch (err) {
             console.error('Error fetching student:', err);
+            showAlert('حدث خطأ أثناء تحميل تفاصيل الطالب', 'error', 'خطأ');
         }
     }
 
@@ -497,7 +538,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     showToast('تم نسخ تفاصيل النتيجة بنجاح!');
                 });
             } else {
-                alert(`${shareText}\n${shareUrl}`);
+                showToast('تم إعداد تفاصيل النتيجة للمشاركة');
             }
         });
     }

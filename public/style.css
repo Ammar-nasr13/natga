@@ -478,6 +478,85 @@ body {
 .metric-val { font-size: 1.4rem; font-weight: 900; font-family: var(--font-en); color: var(--navy-primary); }
 .metric-lbl { font-size: 0.8rem; color: var(--text-secondary); }
 
+/* Custom Premium UI Alert Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    background: rgba(11, 25, 44, 0.65);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 1.2rem;
+    animation: fadeIn 0.25s ease;
+}
+
+.modal-card {
+    background: #FFFFFF;
+    border-radius: 20px;
+    padding: 1.8rem 1.6rem;
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(11, 25, 44, 0.25);
+    border: 1px solid var(--bg-glass-border);
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.modal-icon-badge {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+}
+.modal-icon-badge.warning { background: rgba(217, 119, 6, 0.12); color: var(--warning-amber); }
+.modal-icon-badge.error { background: rgba(220, 38, 38, 0.12); color: var(--danger-red); }
+.modal-icon-badge.info { background: rgba(37, 99, 235, 0.12); color: var(--accent-blue); }
+.modal-icon-badge.success { background: rgba(5, 150, 105, 0.12); color: var(--success-emerald); }
+
+.modal-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--navy-primary);
+}
+
+.modal-message {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.modal-confirm-btn {
+    width: 100%;
+    padding: 0.85rem;
+    margin-top: 0.5rem;
+    font-size: 1rem;
+    border-radius: var(--radius-md);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes popIn {
+    from { opacity: 0; transform: scale(0.85) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
 /* Toast Notifications */
 .toast-notification {
     position: fixed;
@@ -592,7 +671,7 @@ body {
 /* Print Styles */
 @media print {
     body { background: #fff !important; color: #000 !important; }
-    .navbar, .hero-section, .search-card, .footer, .no-print, .nav-links, .toast-notification { display: none !important; }
+    .navbar, .hero-section, .search-card, .footer, .no-print, .nav-links, .toast-notification, .modal-overlay { display: none !important; }
     .container { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
     .result-card { border: 2px solid #000 !important; box-shadow: none !important; margin: 0 auto !important; width: 100% !important; }
     .score-visualization-row { background: #f8fafc !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
