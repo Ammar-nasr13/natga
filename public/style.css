@@ -47,9 +47,10 @@
     padding: 0;
 }
 
-html, body {
-    width: 100%;
+html {
+    scroll-behavior: smooth;
     overflow-x: hidden;
+    height: 100%;
 }
 
 body {
@@ -58,6 +59,10 @@ body {
     color: var(--text-primary);
     line-height: 1.6;
     min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     display: flex;
     flex-direction: column;
     -webkit-font-smoothing: antialiased;
@@ -259,7 +264,7 @@ body {
     padding: 0.95rem 3rem 0.95rem 1rem;
     color: var(--text-primary);
     font-family: var(--font-ar);
-    font-size: clamp(0.95rem, 3vw, 1.1rem);
+    font-size: clamp(16px, 4vw, 1.1rem);
     font-weight: 700;
     outline: none;
     transition: var(--transition);
@@ -481,17 +486,23 @@ body {
 .dev-highlight { color: var(--accent-gold-yellow); font-family: var(--font-en); font-weight: 800; }
 .footer p { font-size: 0.85rem; color: #94A3B8; }
 
-/* Fully Responsive Breakpoints */
+/* Fully Responsive Breakpoints & Mobile Keyboard Optimization */
 @media (max-width: 640px) {
+    .main-content {
+        padding-top: 1.2rem;
+        padding-bottom: 6rem; /* Extra space so virtual keyboard doesn't hide content */
+    }
     .nav-container { flex-direction: column; gap: 0.6rem; text-align: center; }
     .nav-links { justify-content: center; width: 100%; }
     .input-group { flex-direction: column; }
-    .input-group input { padding: 0.85rem 2.8rem 0.85rem 0.8rem; }
+    .input-group input { padding: 0.85rem 2.8rem 0.85rem 0.8rem; font-size: 16px; }
     .primary-btn { width: 100%; padding: 0.85rem; }
     .cert-header { flex-direction: column; text-align: center; justify-content: center; }
     .score-visualization-row { flex-direction: column; text-align: center; }
     .cert-footer { justify-content: center; }
     .secondary-btn { width: 100%; justify-content: center; }
+    .search-card { margin-bottom: 1.5rem; }
+    .suggestions-box { max-height: 200px; }
 }
 
 @media (max-width: 360px) {

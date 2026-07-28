@@ -70,6 +70,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Auto-scroll input into view when mobile virtual keyboard opens
+    [seatInput, nameInput].forEach(input => {
+        if (input) {
+            input.addEventListener('focus', () => {
+                setTimeout(() => {
+                    input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 300);
+            });
+        }
+    });
+
     // 3. Theme Toggle Switcher (Safely guarded)
     if (themeToggleBtn) {
         themeToggleBtn.addEventListener('click', () => {
