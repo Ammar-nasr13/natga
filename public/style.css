@@ -682,23 +682,43 @@ body {
 
 /* Fully Responsive Breakpoints & Mobile Keyboard Optimization */
 @media (max-width: 640px) {
+    .navbar {
+        padding: 0.7rem 0;
+    }
     .main-content {
-        padding-top: 1.2rem;
+        padding-top: 2rem;
         padding-bottom: 6rem;
+    }
+    .hero-section {
+        margin-top: 2.4rem;
+        margin-bottom: 2rem;
     }
     .nav-container {
         flex-direction: column;
-        gap: 0.6rem;
+        gap: 0.65rem;
         text-align: center;
+    }
+    .brand-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 1.2rem;
+        border-radius: 8px;
+    }
+    .brand-text h1 {
+        font-size: 1.05rem;
+    }
+    .badge-year {
+        font-size: 0.72rem;
     }
     .nav-links {
         justify-content: center;
         width: 100%;
-        gap: 0.3rem;
+        gap: 0.35rem;
     }
     .nav-btn {
-        padding: 0.45rem 0.75rem;
+        padding: 0.45rem 0.8rem;
         font-size: 0.82rem;
+        border-radius: 20px;
     }
     .input-group {
         flex-direction: column;
