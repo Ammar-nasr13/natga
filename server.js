@@ -259,7 +259,18 @@ if (cluster.isPrimary && !process.env.NO_CLUSTER && numCPUs > 1) {
         }
     });
 
-    // 2. Ultra-fast Search by name or seat number
+    // Arabic Normalization Helper (أ/إ/آ -> ا, ى -> ي, ة -> ه)
+    function normalizeArabic(text) {
+        if (!text) return '';
+        return text
+            .replace(/[أإآٱ]/g, 'ا')
+            .replace(/ى/g, 'ي')
+            .replace(/ة/g, 'ه')
+            .replace(/[\u064B-\u0652]/g, '')
+            .trim();
+    }
+
+    // 2. Ultra-fast & Flexible Search by name or seat number
     app.get('/api/search', (req, res) => {
         try {
             if (!dbReady) {
@@ -288,14 +299,37 @@ if (cluster.isPrimary && !process.env.NO_CLUSTER && numCPUs > 1) {
                     results = stmtSearchSeatPrefix.all(`${query}%`);
                 }
             } else {
+                const normQ = normalizeArabic(query);
+                const words = normQ.split(/\s+/).filter(Boolean);
+
+                // Tier 1: FTS5 exact search
                 try {
                     const ftsQuery = query.split(/\s+/).filter(Boolean).map(term => `${term}*`).join(' AND ');
                     results = stmtFtsSearchByName.all(ftsQuery);
-                } catch (ftsErr) {
-                    results = stmtSearchByNameFallback.all(`%${query}%`);
-                }
+                } catch (e) {}
+
+                // Tier 2: FTS5 normalized search
                 if (!results || results.length === 0) {
-                    results = stmtSearchByNameFallback.all(`%${query}%`);
+                    try {
+                        const ftsNormQuery = words.map(term => `${term}*`).join(' AND ');
+                        results = stmtFtsSearchByName.all(ftsNormQuery);
+                    } catch (e) {}
+                }
+
+                // Tier 3: LIKE sequence search with normalized words
+                if (!results || results.length === 0) {
+                    try {
+                        const pattern = '%' + words.join('%') + '%';
+                        results = stmtSearchByNameFallback.all(pattern);
+                    } catch (e) {}
+                }
+
+                // Tier 4: Flexible first + last name wildcard match for multi-word queries
+                if ((!results || results.length === 0) && words.length >= 3) {
+                    try {
+                        const flexPattern = '%' + words[0] + '%' + words[words.length - 1] + '%';
+                        results = stmtSearchByNameFallback.all(flexPattern);
+                    } catch (e) {}
                 }
             }
 
