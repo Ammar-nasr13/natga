@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const zlib = require('zlib');
 const { DatabaseSync } = require('node:sqlite');
 
 const app = express();
@@ -10,8 +11,23 @@ const HOST = '0.0.0.0';
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Connect to SQLite Database safely
 const dbPath = path.join(__dirname, 'results.db');
+const dbGzPath = path.join(__dirname, 'results.db.gz');
+
+// Auto-decompress results.db.gz if results.db is missing
+if (!fs.existsSync(dbPath) && fs.existsSync(dbGzPath)) {
+    try {
+        console.log('📦 Decompressing results.db.gz (76 MB -> 295 MB)... Please wait a few seconds.');
+        const compressedData = fs.readFileSync(dbGzPath);
+        const decompressedData = zlib.gunzipSync(compressedData);
+        fs.writeFileSync(dbPath, decompressedData);
+        console.log('✅ Database decompressed successfully to results.db!');
+    } catch (decompErr) {
+        console.error('❌ Failed to decompress results.db.gz:', decompErr);
+    }
+}
+
+// Connect to SQLite Database safely
 let db = null;
 let stmtGetBySeat = null;
 let stmtSearchSeatPrefix = null;
@@ -117,7 +133,7 @@ app.get('/health', (req, res) => {
 app.get('/api/student/:seat', (req, res) => {
     try {
         if (!dbReady) {
-            return res.status(503).json({ success: false, message: 'قاعدة البيانات غير متوفرة على الخادم حالياً. يرجى رفع ملف results.db' });
+            return res.status(503).json({ success: false, message: 'قاعدة البيانات جاري فك ضغطها أو غير متوفرة حالياً.' });
         }
         const seat = parseInt(req.params.seat, 10);
         if (isNaN(seat)) {
