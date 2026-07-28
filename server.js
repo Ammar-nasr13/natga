@@ -10,13 +10,38 @@ const { DatabaseSync } = require('node:sqlite');
 const PORT = process.env.PORT || 3000;
 const HOST = '0.0.0.0';
 
+const dbPath = path.join(__dirname, 'results.db');
+const dbGzPath = path.join(__dirname, 'results.db.gz');
+
+// Safe, Atomic Decompression Function
+function ensureDbDecompressed() {
+    if (!fs.existsSync(dbPath) && fs.existsSync(dbGzPath)) {
+        try {
+            console.log(`[Process ${process.pid}] 📦 Decompressing results.db.gz (76 MB -> 295 MB)... Please wait a few seconds.`);
+            const compressedData = fs.readFileSync(dbGzPath);
+            const decompressedData = zlib.gunzipSync(compressedData);
+            const tempDbPath = path.join(__dirname, 'results.db.tmp');
+            fs.writeFileSync(tempDbPath, decompressedData);
+            if (fs.existsSync(tempDbPath)) {
+                fs.renameSync(tempDbPath, dbPath);
+            }
+            console.log(`[Process ${process.pid}] ✅ Database decompressed successfully!`);
+        } catch (decompErr) {
+            console.error(`[Process ${process.pid}] ❌ Decompression error:`, decompErr);
+        }
+    }
+}
+
 // Enable Multi-core Cluster Mode for High Concurrency (Traffic Spikes)
 const numCPUs = typeof os.availableParallelism === 'function' ? os.availableParallelism() : os.cpus().length;
 
 if (cluster.isPrimary && !process.env.NO_CLUSTER && numCPUs > 1) {
     console.log(`🚀 Primary Cluster Master process ${process.pid} is running`);
-    console.log(`⚡ Spawning ${numCPUs} worker processes to handle heavy traffic...`);
+    
+    // Ensure Database is decompressed ONCE in Master before spawning workers
+    ensureDbDecompressed();
 
+    console.log(`⚡ Spawning ${numCPUs} worker processes to handle heavy traffic...`);
     for (let i = 0; i < numCPUs; i++) {
         cluster.fork();
     }
@@ -27,6 +52,8 @@ if (cluster.isPrimary && !process.env.NO_CLUSTER && numCPUs > 1) {
     });
 } else {
     // Worker Process Execution
+    ensureDbDecompressed();
+
     const app = express();
 
     // 1. High Performance Compression Middleware (Gzip/Brotli)
@@ -39,22 +66,6 @@ if (cluster.isPrimary && !process.env.NO_CLUSTER && numCPUs > 1) {
         etag: true,
         lastModified: true
     }));
-
-    const dbPath = path.join(__dirname, 'results.db');
-    const dbGzPath = path.join(__dirname, 'results.db.gz');
-
-    // Auto-decompress results.db.gz if results.db is missing
-    if (!fs.existsSync(dbPath) && fs.existsSync(dbGzPath)) {
-        try {
-            console.log(`[Worker ${process.pid}] 📦 Decompressing results.db.gz (76 MB -> 295 MB)...`);
-            const compressedData = fs.readFileSync(dbGzPath);
-            const decompressedData = zlib.gunzipSync(compressedData);
-            fs.writeFileSync(dbPath, decompressedData);
-            console.log(`[Worker ${process.pid}] ✅ Database decompressed successfully!`);
-        } catch (decompErr) {
-            console.error(`[Worker ${process.pid}] ❌ Failed to decompress results.db.gz:`, decompErr);
-        }
-    }
 
     // Connect to SQLite Database safely
     let db = null;
@@ -166,7 +177,6 @@ if (cluster.isPrimary && !process.env.NO_CLUSTER && numCPUs > 1) {
 
     function setToCache(key, val) {
         if (memoryCache.size >= MAX_CACHE_SIZE) {
-            // Evict oldest entry (LRU)
             const firstKey = memoryCache.keys().next().value;
             memoryCache.delete(firstKey);
         }
@@ -203,7 +213,7 @@ if (cluster.isPrimary && !process.env.NO_CLUSTER && numCPUs > 1) {
     app.get('/api/student/:seat', (req, res) => {
         try {
             if (!dbReady) {
-                return res.status(503).json({ success: false, message: 'قاعدة البيانات غير متوفرة حالياً' });
+                return res.status(503).json({ success: false, message: 'قاعدة البيانات جاري إعدادها على الخادم، يرجى إعادة المحاولة خلال ثوانٍ.' });
             }
             const seatStr = req.params.seat;
             const cacheKey = `student:${seatStr}`;
@@ -253,7 +263,7 @@ if (cluster.isPrimary && !process.env.NO_CLUSTER && numCPUs > 1) {
     app.get('/api/search', (req, res) => {
         try {
             if (!dbReady) {
-                return res.status(503).json({ success: false, message: 'قاعدة البيانات غير متوفرة حالياً' });
+                return res.status(503).json({ success: false, message: 'قاعدة البيانات جاري إعدادها على الخادم.' });
             }
             const query = (req.query.q || '').trim();
             if (!query || query.length < 2) {
@@ -304,7 +314,7 @@ if (cluster.isPrimary && !process.env.NO_CLUSTER && numCPUs > 1) {
     app.get('/api/top', (req, res) => {
         try {
             if (!dbReady) {
-                return res.status(503).json({ success: false, message: 'قاعدة البيانات غير متوفرة حالياً' });
+                return res.status(503).json({ success: false, message: 'قاعدة البيانات جاري إعدادها على الخادم.' });
             }
             const limit = Math.min(parseInt(req.query.limit || '50', 10), 100);
             const cacheKey = `top:${limit}`;
@@ -331,7 +341,7 @@ if (cluster.isPrimary && !process.env.NO_CLUSTER && numCPUs > 1) {
     app.get('/api/stats', (req, res) => {
         try {
             if (!dbReady) {
-                return res.status(503).json({ success: false, message: 'قاعدة البيانات غير متوفرة حالياً' });
+                return res.status(503).json({ success: false, message: 'قاعدة البيانات جاري إعدادها على الخادم.' });
             }
             const cacheKey = `stats:global`;
             const cachedStatsData = getFromCache(cacheKey);
