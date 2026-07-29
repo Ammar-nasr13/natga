@@ -571,12 +571,12 @@ body {
 }
 
 .metric-card {
-    flex: 1 1 0;
-    min-width: 170px;
+    flex: 1 0 190px;
+    min-width: 190px;
     display: flex;
     align-items: center;
     gap: 0.85rem;
-    padding: 1.1rem 0.95rem;
+    padding: 1.1rem 1rem;
     border-radius: var(--radius-lg);
     background: #FFFFFF;
     border: 1px solid var(--bg-glass-border);
@@ -610,11 +610,12 @@ body {
 .metric-info {
     display: flex;
     flex-direction: column;
-    min-width: 0;
+    gap: 0.2rem;
+    flex: 1;
 }
 
 .metric-val {
-    font-size: clamp(1.1rem, 3.8vw, 1.45rem);
+    font-size: clamp(1.15rem, 3.8vw, 1.45rem);
     font-weight: 900;
     font-family: var(--font-en);
     color: var(--navy-primary);
@@ -622,12 +623,12 @@ body {
 }
 
 .metric-lbl {
-    font-size: 0.76rem;
+    font-size: 0.82rem;
     color: var(--text-muted);
     font-weight: 700;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.35;
 }
 
 /* Custom Premium UI Alert Modal */
