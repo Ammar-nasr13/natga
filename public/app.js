@@ -280,7 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td><strong>${stu.total_degree}</strong> / 320</td>
                 <td><span style="font-family:var(--font-en); font-weight:700;">${stu.percentage}%</span></td>
                 <td><span class="cert-badge ${badgeClass}" style="padding:0.2rem 0.8rem; font-size:0.8rem;">${stu.student_case_desc}</span></td>
-                <td>#${stu.rank.toLocaleString('ar-EG')}</td>
+                <td>#${stu.rank.toLocaleString('en-US')}</td>
                 <td>
                     <button class="secondary-btn view-btn" style="padding:0.3rem 0.8rem; font-size:0.8rem;" data-seat="${stu.seating_no}">
                         <i class="fa-solid fa-eye"></i> عرض
@@ -328,7 +328,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (nameEl) nameEl.textContent = student.arabic_name;
         if (seatEl) seatEl.textContent = student.seating_no;
-        if (rankEl) rankEl.textContent = `#${student.rank.toLocaleString('ar-EG')}`;
+        if (rankEl) rankEl.textContent = `#${student.rank.toLocaleString('en-US')}`;
         if (percentageEl) percentageEl.textContent = `${student.percentage}%`;
         if (scoreEl) scoreEl.textContent = student.total_degree;
 
@@ -427,10 +427,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const elSecond = document.getElementById('stat-second');
                 const elFailed = document.getElementById('stat-failed');
 
-                if (elTotal) elTotal.textContent = parseInt(stats.total_students).toLocaleString('ar-EG');
-                if (elPassed) elPassed.textContent = parseInt(stats.passed_count).toLocaleString('ar-EG');
-                if (elSecond) elSecond.textContent = parseInt(stats.second_round_count).toLocaleString('ar-EG');
-                if (elFailed) elFailed.textContent = parseInt(stats.failed_count).toLocaleString('ar-EG');
+                if (elTotal) elTotal.textContent = parseInt(stats.total_students).toLocaleString('en-US');
+                if (elPassed) elPassed.textContent = parseInt(stats.passed_count).toLocaleString('en-US');
+                if (elSecond) elSecond.textContent = parseInt(stats.second_round_count).toLocaleString('en-US');
+                if (elFailed) elFailed.textContent = parseInt(stats.failed_count).toLocaleString('en-US');
 
                 // Render Distribution Bars
                 const dist = stats.distribution;
@@ -454,7 +454,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         row.innerHTML = `
                             <div class="dist-meta">
                                 <span><i class="fa-solid ${r.icon}" style="color: ${r.color}; margin-left: 0.4rem;"></i> ${r.label}</span>
-                                <span><strong>${parseInt(r.count).toLocaleString('ar-EG')} طالب</strong> <span style="color: ${r.color}; font-family: var(--font-en); font-weight: 800; margin-right: 0.3rem;">(${pct}%)</span></span>
+                                <span><strong>${parseInt(r.count).toLocaleString('en-US')} طالب</strong> <span style="color: ${r.color}; font-family: var(--font-en); font-weight: 800; margin-right: 0.3rem;">(${pct}%)</span></span>
                             </div>
                             <div class="dist-bar-outer">
                                 <div class="dist-bar-inner" style="width: ${pct}%; background: ${r.color};"></div>
